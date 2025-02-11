@@ -1,0 +1,386 @@
+{
+  "name": "AI Agent Airtable Memory",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -440,
+        20
+      ],
+      "id": "362cb520-8f58-4d32-932b-08a9267c1a25",
+      "name": "When chat message received",
+      "webhookId": "8cd2f5f7-4975-4022-b7d7-c9ac3a9426b2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=# System Prompt\nYou're personal assistant to the Customer. You should answer all questions they have and tailor your responses to what you know about the customer.\n\nThe customer you are currently talking to is 'Marcel'.\n\n# Memory Rules\n\nWhen you receive a memssage from the customer, you should make note of any information they have provided that could be stored as a memory to better inform future respones. If there is a memory worth saving, call the Save Memory tool to store the memory. \n\nYou should not tell the customer that you have called this tool, but you can let them know that you'll remember that for next time.\n\n# Available Tools\n##  Save Memory\nUse this tool to save a memory about the customer to a persistent store where it can be retreived later on.\nIdentify memories from the customer's message, and condense them into atomic memories. You should prefer to call this tool multiple times, for each memory, rather than grouping them into one.\n\nIf a memory is already present in the memory store, there is no need to call this tool again for that memory.\n\n## Remove memory\nUse this tool to remove a memory about the customer from the persistent store.\nExtract information from the customer's message and determine if we should remove and forget a previously stored memory. Do not tell the customer that you have removed the memory. This tool can be called multiple times if there are many related memories!\n\n# Memory Store\nHere is a mapping of all the customer's memories, sorted in ascending order by the date they were recorded.\n\n{{ $json.memories.toJsonString() }}\n\n# Rules\nWhen responding, always take these memories into account. If multiple memories conflict, you can remove the older of the two. Weight your response to be tailored to the more recent memories."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        520,
+        40
+      ],
+      "id": "165080e3-d38c-4b6f-9a6c-5c499f126bdf",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        400
+      ],
+      "id": "e9406c09-0168-4bed-be2b-5073b7ee4329",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "T9kfSzy95ZtEqvyd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        400
+      ],
+      "id": "6eabf847-6e52-43e3-9c23-ab0f8dd9538d",
+      "name": "Window Buffer Memory",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app98GmGtPsxuWMsY",
+          "mode": "list",
+          "cachedResultName": "Memory Base",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblI5C3qBx4SUPlMK",
+          "mode": "list",
+          "cachedResultName": "Customer Memories",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY/tblI5C3qBx4SUPlMK"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Memory": "={{ $fromAI('memory') }}",
+            "Customer": "Marcel"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Customer",
+              "displayName": "Customer",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Memory",
+              "displayName": "Memory",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created",
+              "displayName": "Created",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        400
+      ],
+      "id": "6e4fb80b-70f5-40ce-9057-12c2ef714005",
+      "name": "Save Memory",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zv3kSlZGpFukdfjT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app98GmGtPsxuWMsY",
+          "mode": "list",
+          "cachedResultName": "Memory Base",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblI5C3qBx4SUPlMK",
+          "mode": "list",
+          "cachedResultName": "Customer Memories",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY/tblI5C3qBx4SUPlMK"
+        },
+        "filterByFormula": "({Customer} = 'Marcel')",
+        "options": {},
+        "sort": {
+          "property": [
+            {
+              "field": "Created"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        180
+      ],
+      "id": "4aa01ce8-b055-4781-8243-784cae85768c",
+      "name": "Airtable",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zv3kSlZGpFukdfjT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "memories",
+        "include": "specifiedFields",
+        "fieldsToInclude": "Memory, Created, id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        180
+      ],
+      "id": "48af1611-9d08-4173-b453-a539284dd437",
+      "name": "Aggregate",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        280,
+        40
+      ],
+      "id": "6e91795d-d2e9-444f-bf31-dafd034cafa8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRecord",
+        "base": {
+          "__rl": true,
+          "value": "app98GmGtPsxuWMsY",
+          "mode": "list",
+          "cachedResultName": "Memory Base",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblI5C3qBx4SUPlMK",
+          "mode": "list",
+          "cachedResultName": "Customer Memories",
+          "cachedResultUrl": "https://airtable.com/app98GmGtPsxuWMsY/tblI5C3qBx4SUPlMK"
+        },
+        "id": "={{ $fromAI('memory_id') }} "
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        840,
+        400
+      ],
+      "id": "ec9a8c04-0ddc-49b7-a11c-150b84517f75",
+      "name": "Remove Memory",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "zv3kSlZGpFukdfjT",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Save Memory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Memory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "07be2227-4767-4f31-9f2b-54da2de7e2e9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b08d7daf2c583668d4c9db9ee7d9052004d04a006845b225c862c7d51ad63cbb"
+  },
+  "id": "7AePsaidjVFPeD4M",
+  "tags": [
+    {
+      "createdAt": "2025-02-09T23:48:17.530Z",
+      "updatedAt": "2025-02-09T23:48:17.530Z",
+      "id": "IynSjAdLppiAn8X3",
+      "name": "chatgpt"
+    },
+    {
+      "createdAt": "2025-02-09T23:48:22.681Z",
+      "updatedAt": "2025-02-09T23:48:22.681Z",
+      "id": "UIrEuMK3YvVHvx3k",
+      "name": "airtable"
+    }
+  ]
+}
